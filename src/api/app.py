@@ -26,7 +26,7 @@ from src.features.feature_engineering import engineer
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 MODELS_DIR = PROJECT_ROOT / "models"
 
-model = joblib.load(MODELS_DIR / "xgboost.joblib")
+model = joblib.load(MODELS_DIR / "logistic_regression.joblib")
 feature_columns = joblib.load(MODELS_DIR / "feature_columns.joblib")
 
 app = FastAPI(title="Customer Churn Prediction API", version="1.0.0")
@@ -85,7 +85,7 @@ def _recommend(c: Customer, proba: float) -> str:
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "model": "xgboost", "n_features": len(feature_columns)}
+    return {"status": "ok", "model": "logistic_regression", "n_features": len(feature_columns)}
 
 
 @app.post("/predict", response_model=Prediction)
@@ -237,4 +237,3 @@ PAGE = """<!DOCTYPE html>
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
-    
