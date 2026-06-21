@@ -15,6 +15,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import sys
@@ -30,6 +31,15 @@ model = joblib.load(MODELS_DIR / "logistic_regression.joblib")
 feature_columns = joblib.load(MODELS_DIR / "feature_columns.joblib")
 
 app = FastAPI(title="Customer Churn Prediction API", version="1.0.0")
+# Allow the frontend (e.g. on Vercel) to call this API from another domain.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],          # we'll tighten this to your Vercel URL later
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 
 class Customer(BaseModel):
