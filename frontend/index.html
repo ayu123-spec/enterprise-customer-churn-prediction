@@ -1,1 +1,302 @@
-var API_BASE = "https://customer-churn-prediction-hfwi.onrender.com";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Churn Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --glass: rgba(255, 255, 255, 0.055);
+    --glass-2: rgba(255, 255, 255, 0.03);
+    --stroke: rgba(255, 255, 255, 0.10);
+    --stroke-2: rgba(255, 255, 255, 0.16);
+    --txt: #eef2ff;
+    --mut: #9aa6bf;
+    --risk: #34d399;
+    --accent: linear-gradient(135deg, #a78bfa 0%, #818cf8 45%, #22d3ee 100%);
+  }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    color: var(--txt);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 18px;
+    background: #070b18;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* aurora background */
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    width: 70vw; height: 70vw;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.55;
+    z-index: 0;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  body::before { background: radial-gradient(circle, #7c3aed, transparent 60%); top: -20vw; left: -15vw; }
+  body::after  { background: radial-gradient(circle, #06b6d4, transparent 60%); bottom: -25vw; right: -15vw; animation-delay: -6s; }
+  @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(40px, 30px) scale(1.12); } }
+
+  .wrap { width: 100%; max-width: 1000px; position: relative; z-index: 1; }
+
+  .header { display: flex; align-items: center; gap: 15px; margin-bottom: 24px; padding-left: 4px; }
+  .logo {
+    width: 50px; height: 50px; border-radius: 15px; display: grid; place-items: center;
+    background: var(--accent); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.5);
+  }
+  .logo svg { width: 26px; height: 26px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .header h1 { font-size: 23px; font-weight: 700; letter-spacing: -0.02em; }
+  .header .sub { font-size: 13.5px; color: var(--mut); margin-top: 3px; }
+
+  .grid { display: grid; grid-template-columns: 1.12fr 0.88fr; gap: 20px; }
+  @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    border-radius: 22px;
+    padding: 26px;
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    box-shadow: 0 14px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+  .panel h2 { font-size: 16px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 9px; }
+  .panel h2 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+
+  .fg { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+  .f { display: flex; flex-direction: column; gap: 8px; }
+  .f.full { grid-column: 1 / -1; }
+  label { font-size: 12px; color: var(--mut); font-weight: 500; letter-spacing: 0.01em; }
+  input, select {
+    width: 100%; padding: 12px 14px; border-radius: 13px; font-size: 14.5px; font-family: inherit;
+    color: var(--txt); background: rgba(255, 255, 255, 0.045);
+    border: 1px solid var(--stroke); outline: none; transition: all 0.18s ease;
+  }
+  select {
+    appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 38px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%239aa6bf' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M3 5l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+  }
+  input:hover, select:hover { border-color: var(--stroke-2); }
+  input:focus, select:focus {
+    border-color: #8b5cf6; background: rgba(255, 255, 255, 0.075);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.28);
+  }
+  option { background: #0d1326; color: #fff; }
+
+  .btn {
+    grid-column: 1 / -1; margin-top: 8px; padding: 14px; border: none; border-radius: 14px; cursor: pointer;
+    font-size: 15px; font-weight: 600; font-family: inherit; color: #fff; letter-spacing: 0.01em;
+    background: var(--accent); box-shadow: 0 12px 30px rgba(99, 102, 241, 0.45); transition: all 0.18s ease;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 18px 38px rgba(99, 102, 241, 0.6); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.7; cursor: default; transform: none; }
+  .btn svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.2; }
+
+  .res { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+  .empty svg { width: 50px; height: 50px; stroke: rgba(255, 255, 255, 0.22); fill: none; stroke-width: 1.6; margin-bottom: 12px; }
+  .empty p { color: var(--mut); font-size: 14px; line-height: 1.55; max-width: 240px; }
+
+  .ring {
+    width: 184px; height: 184px; border-radius: 50%; display: grid; place-items: center; margin: 2px 0 8px;
+    background: conic-gradient(var(--risk) calc(var(--pct, 0) * 1%), rgba(255, 255, 255, 0.07) 0);
+    box-shadow: 0 0 38px -8px var(--risk);
+  }
+  .ring .ctr {
+    width: 144px; height: 144px; border-radius: 50%; background: rgba(8, 12, 24, 0.82);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .pct { font-size: 38px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+  .pctl { font-size: 11px; color: var(--mut); text-transform: uppercase; letter-spacing: 0.09em; margin-top: 5px; }
+  .badge { padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; }
+  .rec {
+    margin-top: 16px; width: 100%; background: var(--glass-2); border: 1px solid var(--stroke);
+    border-radius: 15px; padding: 15px 17px; text-align: left;
+  }
+  .rec h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--mut); margin-bottom: 7px; font-weight: 600; }
+  .rec p { font-size: 13.5px; line-height: 1.6; color: #d4ddec; }
+  .note { font-size: 11.5px; color: #fbbf24; margin-top: 12px; opacity: 0.9; }
+  .hidden { display: none; }
+  .footer { text-align: center; color: var(--mut); font-size: 12px; margin-top: 22px; opacity: 0.7; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="logo"><svg viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4" /></svg></div>
+      <div>
+        <h1>Churn Intelligence</h1>
+        <div class="sub">Predict a customer's churn risk in real time</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- FORM -->
+      <div class="panel">
+        <h2><span class="dot"></span>Customer details</h2>
+        <div class="fg">
+          <div class="f"><label>Tenure (months)</label><input id="tenure" type="number" min="0" value="3" /></div>
+          <div class="f"><label>Senior citizen</label><select id="senior"><option value="0">No</option><option value="1">Yes</option></select></div>
+          <div class="f"><label>Monthly charges</label><input id="monthly" type="number" min="0" step="0.01" value="89" /></div>
+          <div class="f"><label>Total charges</label><input id="total" type="number" min="0" step="0.01" value="270" /></div>
+          <div class="f full"><label>Contract</label><select id="contract"><option>Month-to-month</option><option>One year</option><option>Two year</option></select></div>
+          <div class="f"><label>Internet service</label><select id="internet"><option>Fiber optic</option><option>DSL</option><option>No</option></select></div>
+          <div class="f"><label>Payment method</label><select id="payment"><option>Electronic check</option><option>Mailed check</option><option>Bank transfer (automatic)</option><option>Credit card (automatic)</option></select></div>
+          <div class="f"><label>Tech support</label><select id="tech"><option>No</option><option>Yes</option></select></div>
+          <div class="f"><label>Online security</label><select id="security"><option>No</option><option>Yes</option></select></div>
+          <div class="f full"><label>Paperless billing</label><select id="paperless"><option>Yes</option><option>No</option></select></div>
+          <button class="btn" id="go">
+            <svg viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4" /></svg>
+            Check churn risk
+          </button>
+        </div>
+      </div>
+
+      <!-- RESULT -->
+      <div class="panel">
+        <div class="res empty" id="empty">
+          <svg viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4" /></svg>
+          <p>Fill in the details and run the check to see this customer's churn risk.</p>
+        </div>
+        <div class="res hidden" id="result">
+          <div class="ring" id="ring"><div class="ctr"><div class="pct" id="pct">0%</div><div class="pctl">churn probability</div></div></div>
+          <div class="badge" id="badge">LOW RISK</div>
+          <div class="rec"><h3>Recommended action</h3><p id="rec">&mdash;</p></div>
+          <div class="note hidden" id="note"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">Powered by your FastAPI churn model</div>
+  </div>
+
+<script>
+(function () {
+  // ===== CONFIG =====
+  // After you deploy the backend to Render, replace this with your live URL,
+  // e.g. "https://churn-api.onrender.com"  (no trailing slash)
+  var API_BASE = "https://customer-churn-prediction-hfwi.onrender.com";
+  // If the API can't be reached, show a local estimate so the page is still usable to preview.
+  var DEMO_FALLBACK = false;
+
+  var RISK = { low: "#34d399", medium: "#fbbf24", high: "#fb7185" };
+  var RISK_RGB = { low: "52,211,153", medium: "251,191,36", high: "251,113,133" };
+  function $(id) { return document.getElementById(id); }
+
+  function collect() {
+    return {
+      tenure: Number($("tenure").value),
+      SeniorCitizen: Number($("senior").value),
+      MonthlyCharges: Number($("monthly").value),
+      TotalCharges: Number($("total").value),
+      Contract: $("contract").value,
+      InternetService: $("internet").value,
+      PaymentMethod: $("payment").value,
+      TechSupport: $("tech").value,
+      OnlineSecurity: $("security").value,
+      PaperlessBilling: $("paperless").value
+    };
+  }
+
+  function level(p) { return p >= 0.6 ? "high" : p >= 0.4 ? "medium" : "low"; }
+
+  function demoScore(c) {
+    var p = 0.25;
+    if (c.Contract === "Month-to-month") p += 0.30; else if (c.Contract === "One year") p += 0.04; else p -= 0.13;
+    if (c.tenure < 6) p += 0.18; else if (c.tenure < 12) p += 0.10; else if (c.tenure > 48) p -= 0.15;
+    if (c.InternetService === "Fiber optic") p += 0.12;
+    if (c.PaymentMethod === "Electronic check") p += 0.10;
+    if (c.TechSupport === "No") p += 0.05;
+    if (c.OnlineSecurity === "No") p += 0.05;
+    if (c.PaperlessBilling === "Yes") p += 0.03;
+    if (c.MonthlyCharges > 80) p += 0.05;
+    return Math.max(0.03, Math.min(0.97, p));
+  }
+  function demoRec(c, p) {
+    var t = [];
+    if (c.Contract === "Month-to-month") t.push("offer a discounted 1- or 2-year contract");
+    if (c.tenure < 12) t.push("prioritise onboarding and early engagement");
+    if (c.TechSupport === "No" || c.OnlineSecurity === "No") t.push("add tech support / online security");
+    if (c.MonthlyCharges > 80) t.push("review the plan for a better-value bundle");
+    if (!t.length) return "Low risk - maintain the current experience and monitor periodically.";
+    return (p >= 0.6 ? "High risk - " : p >= 0.4 ? "Medium risk - " : "Low risk - ") + t.join("; ") + ".";
+  }
+
+  function animateGauge(target) {
+    var ring = $("ring"), pctEl = $("pct"), cur = 0;
+    function step() {
+      cur += (target - cur) * 0.12;
+      if (Math.abs(target - cur) < 0.4) cur = target;
+      ring.style.setProperty("--pct", cur.toFixed(1));
+      pctEl.textContent = Math.round(cur) + "%";
+      if (cur !== target) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function render(prob, lvl, rec, isDemo) {
+    $("empty").classList.add("hidden");
+    $("result").classList.remove("hidden");
+    document.documentElement.style.setProperty("--risk", RISK[lvl]);
+    animateGauge(prob * 100);
+    var b = $("badge");
+    b.textContent = lvl.toUpperCase() + " RISK";
+    b.style.background = "rgba(" + RISK_RGB[lvl] + ",0.16)";
+    b.style.color = RISK[lvl];
+    b.style.border = "1px solid rgba(" + RISK_RGB[lvl] + ",0.45)";
+    $("rec").textContent = rec;
+    var note = $("note");
+    if (isDemo) { note.textContent = "Preview estimate - backend not reached, so this is a local approximation."; note.classList.remove("hidden"); }
+    else { note.classList.add("hidden"); }
+  }
+
+  async function run() {
+    var c = collect();
+    var btn = $("go");
+    btn.disabled = true;
+    btn.textContent = "Checking...";
+    try {
+      var r = await fetch(API_BASE + "/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(c)
+      });
+      if (!r.ok) throw new Error("bad status");
+      var d = await r.json();
+      render(d.churn_probability, d.risk_level, d.recommendation, false);
+    } catch (e) {
+      if (DEMO_FALLBACK) {
+        var p = demoScore(c);
+        render(p, level(p), demoRec(c, p), true);
+      } else {
+        $("empty").classList.add("hidden");
+        $("result").classList.remove("hidden");
+        $("pct").textContent = "!";
+        $("badge").textContent = "NO CONNECTION";
+        $("badge").style.color = "#fb7185";
+        $("rec").textContent = "Could not reach the API at " + API_BASE + ". Make sure the backend is running.";
+      }
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> Check churn risk';
+    }
+  }
+
+  $("go").addEventListener("click", run);
+})();
+</script>
+</body>
+</html>
